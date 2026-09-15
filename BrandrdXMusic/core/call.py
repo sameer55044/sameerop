@@ -12,6 +12,8 @@ from pytgcalls.exceptions import (
     NoActiveGroupCall,
 )
 from pytgcalls.types import (
+    JoinedGroupCallParticipant,
+    LeftGroupCallParticipant,
     MediaStream,
     AudioQuality,
     VideoQuality,
@@ -29,13 +31,18 @@ from BrandrdXMusic.utils.database import (
     get_loop,
     group_assistant,
     is_autoend,
+    is_vclogger_on,
     music_on,
     remove_active_chat,
     remove_active_video_chat,
     set_loop,
 )
 from BrandrdXMusic.utils.exceptions import AssistantErr
-from BrandrdXMusic.utils.formatters import check_duration, seconds_to_min, speed_converter
+from BrandrdXMusic.utils.formatters import (
+    check_duration,
+    seconds_to_min,
+    speed_converter,
+)
 from BrandrdXMusic.utils.inline.play import stream_markup
 from BrandrdXMusic.utils.stream.autoclear import auto_clean
 from BrandrdXMusic.utils.thumbnails import get_thumb
@@ -50,6 +57,14 @@ async def _clear_(chat_id):
     db[chat_id] = []
     await remove_active_video_chat(chat_id)
     await remove_active_chat(chat_id)
+
+
+async def vclogger_mention(user_id: int):
+    try:
+        user = await app.get_users(user_id)
+        return user.mention
+    except:
+        return f"<a href='tg://user?id={user_id}'>ᴜsᴇʀ</a>"
 
 
 class Call(PyTgCalls):
@@ -630,6 +645,34 @@ class Call(PyTgCalls):
             if not isinstance(update, StreamAudioEnded):
                 return
             await self.change_stream(client, update.chat_id)
+
+        @self.one.on_participants_change()
+        @self.two.on_participants_change()
+        @self.three.on_participants_change()
+        @self.four.on_participants_change()
+        @self.five.on_participants_change()
+        async def participants_change_handler(_, update: Update):
+            if not await is_vclogger_on(update.chat_id):
+                return
+            if isinstance(update, JoinedGroupCallParticipant):
+                tag = "#JoinVc"
+            elif isinstance(update, LeftGroupCallParticipant):
+                tag = "#LeftVc"
+            else:
+                return
+            user_id = update.participant.user_id
+            text = (
+                f"<blockquote>{tag}\n"
+                f"👤 User - {await vclogger_mention(user_id)}\n"
+                f"🆔 User Id - {user_id}</blockquote>"
+            )
+            try:
+                return await app.send_message(
+                    update.chat_id,
+                    text,
+                )
+            except:
+                pass
 
 
 Hotty = Call()
