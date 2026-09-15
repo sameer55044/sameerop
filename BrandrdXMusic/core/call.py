@@ -655,24 +655,56 @@ class Call(PyTgCalls):
             if not await is_vclogger_on(update.chat_id):
                 return
             if isinstance(update, JoinedGroupCallParticipant):
-                tag = "#JoinVc"
+                tag = "#JᴏɪɴᴇᴅVᴄ"
             elif isinstance(update, LeftGroupCallParticipant):
-                tag = "#LeftVc"
+                tag = "#LᴇғᴛVᴄ"
             else:
                 return
             user_id = update.participant.user_id
+            status = getattr(update.participant, "status", None)
+
+            if status in ("owner", "administrator"):
+                role = "👑 ADMIN"
+            elif status == "member":
+                  role = "👤 MEMBER"
+            else:
+                role = "🔐 AUTH"
             text = (
                 f"<blockquote>{tag}\n"
-                f"👤 User - {await vclogger_mention(user_id)}\n"
-                f"🆔 User Id - {user_id}</blockquote>"
+                f"Usᴇʀ - {await vclogger_mention(user_id)}\n"
+                f"Usᴇʀɪᴅ - {user_id}</code>\n"
+                f"Rᴏʟᴇ - <b>{role}</b></blockquote>"
             )
+            keyboard = InlineKeyboardMarkup(
+                [   
+                    [
+                       InlineKeyboardButton(
+                           "🎧 Jᴏɪɴ Tᴏ Vᴄ",
+                           url=f"https://t.me/c/{str(update.chat_id)[4:]}"
+                       )
+                    ]
+                 ]
+            )
+
+                    
             try:
-                return await app.send_message(
-                    update.chat_id,
-                    text,
-                )
-            except:
-                pass
+               sent_message = await app.send_message(
+                   update.chat_id,
+                   text,
+               )
+
+               async def delete_after_5_seconds():
+                   await asyncio.sleep(5)
+                   try:
+                       await sent_message.delete()
+                   except Exception:
+                       pass
+
+               asyncio.create_task(delete_after_5_seconds())
+
+               return sent_message
+           except:
+               pass
 
 
 Hotty = Call()
