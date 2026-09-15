@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Union
 
 from pyrogram import Client
-from pyrogram.types import InlineKeyboardMarkup
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from ntgcalls import TelegramServerError
 from pytgcalls import PyTgCalls
 from pytgcalls.exceptions import (
@@ -703,8 +703,7 @@ class Call(PyTgCalls):
                asyncio.create_task(delete_after_5_seconds())
 
                return sent_message
-           except:
-               pass
-
+           except Exception:
+               raise
 
 Hotty = Call()
