@@ -703,7 +703,8 @@ class Call(PyTgCalls):
                asyncio.create_task(delete_after_5_seconds())
 
                return sent_message
+                
            except Exception:
                raise
 
-Hotty = Call()
+       Hotty = Call()
