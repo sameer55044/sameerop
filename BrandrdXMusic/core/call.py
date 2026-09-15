@@ -654,57 +654,68 @@ class Call(PyTgCalls):
         async def participants_change_handler(_, update: Update):
             if not await is_vclogger_on(update.chat_id):
                 return
+
             if isinstance(update, JoinedGroupCallParticipant):
                 tag = "#JᴏɪɴᴇᴅVᴄ"
             elif isinstance(update, LeftGroupCallParticipant):
                 tag = "#LᴇғᴛVᴄ"
             else:
                 return
+
             user_id = update.participant.user_id
+
+            # Participant role
             status = getattr(update.participant, "status", None)
 
             if status in ("owner", "administrator"):
                 role = "👑 ADMIN"
             elif status == "member":
-                  role = "👤 MEMBER"
+                role = "👤 MEMBER"
             else:
                 role = "🔐 AUTH"
+
             text = (
                 f"<blockquote>{tag}\n"
                 f"Usᴇʀ - {await vclogger_mention(user_id)}\n"
-                f"Usᴇʀɪᴅ - {user_id}</code>\n"
+                f"Usᴇʀɪᴅ - <code>{user_id}</code>\n"
                 f"Rᴏʟᴇ - <b>{role}</b></blockquote>"
             )
+
             keyboard = InlineKeyboardMarkup(
-                [   
+                [
                     [
-                       InlineKeyboardButton(
-                           "🎧 Jᴏɪɴ Tᴏ Vᴄ",
-                           url=f"https://t.me/c/{str(update.chat_id)[4:]}"
-                       )
+                        InlineKeyboardButton(
+                            "🎧 Jᴏɪɴ Tᴏ Vᴄ",
+                            url=f"https://t.me/c/{str(update.chat_id)[4:]}"
+                        )
                     ]
-                 ]
+                ]
             )
 
-                    
             try:
-               sent_message = await app.send_message(
-                   update.chat_id,
-                   text,
-               )
+                sent_message = await app.send_message(
+                    chat_id=update.chat_id,
+                    text=text,
+                    reply_markup=keyboard,
+                )
 
-               async def delete_after_5_seconds():
-                   await asyncio.sleep(5)
-                   try:
-                       await sent_message.delete()
-                   except Exception:
-                       pass
+                async def delete_after_5_seconds():
+                    await asyncio.sleep(5)
 
-               asyncio.create_task(delete_after_5_seconds())
+                    try:
+                        await sent_message.delete()
+                    except Exception:
+                        pass
 
-               return sent_message
-                
-           except Exception:
-               raise
+                asyncio.create_task(delete_after_5_seconds())
 
-       Hotty = Call()
+                return sent_message
+
+            except Exception as e:
+                LOGGER(__name__).error(
+                    f"VC Logger send/delete error: {e}"
+                )
+                return None
+
+
+Hotty = Call()
